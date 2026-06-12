@@ -1,0 +1,46 @@
+{
+  "name": "docjet-mcp",
+  "displayName": "DocJet",
+  "description": "Render branded PDF documents (invoices, reports, certificates) and PNG social images from any MCP client. Send a template ID or raw HTML plus JSON data, get back a signed download URL.",
+  "version": "1.0.0",
+  "vendor": "DocJet",
+  "homepage": "https://docjet.dev",
+  "documentation": "https://docjet.dev/docs",
+  "license": "MIT",
+  "transport": {
+    "type": "stdio"
+  },
+  "installation": {
+    "command": "npx",
+    "args": ["docjet-mcp"],
+    "env": {
+      "DOCJET_API_KEY": "<your DocJet API key>"
+    }
+  },
+  "environment": [
+    {
+      "name": "DOCJET_API_KEY",
+      "description": "DocJet API key (binfra_ prefix). Required for render_pdf and render_image.",
+      "required": true
+    },
+    {
+      "name": "DOCJET_BASE_URL",
+      "description": "Override the API base URL (default: https://api.docjet.dev).",
+      "required": false
+    }
+  ],
+  "tools": [
+    {
+      "name": "render_pdf",
+      "description": "Render a branded PDF document. Provide a template_id (discover with list_templates) or raw html, plus a data object for template variables. Returns a signed download URL."
+    },
+    {
+      "name": "render_image",
+      "description": "Render a PNG image (e.g. an OG/social card). Provide a template_id or raw html, plus a data object. Returns a signed download URL."
+    },
+    {
+      "name": "list_templates",
+      "description": "List available DocJet templates: id, name, description and outputType (pdf or png). No API key required."
+    }
+  ]
+}
