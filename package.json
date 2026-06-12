@@ -35,5 +35,9 @@
     "document",
     "render"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docjet-dev/docjet-mcp.git"
+  }
 }
