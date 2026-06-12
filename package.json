@@ -1,0 +1,38 @@
+{
+  "name": "docjet-mcp",
+  "version": "1.0.0",
+  "description": "DocJet MCP server — render branded PDFs and PNG images from any MCP client. Tools: render_pdf, render_image, list_templates. Stdio transport, npx-runnable.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "docjet-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "4.1.8"
+  },
+  "keywords": [
+    "docjet",
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "pdf",
+    "document",
+    "render"
+  ],
+  "license": "MIT"
+}
