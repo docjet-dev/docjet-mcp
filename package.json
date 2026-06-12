@@ -1,6 +1,6 @@
 {
   "name": "docjet-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DocJet MCP server — render branded PDFs and PNG images from any MCP client. Tools: render_pdf, render_image, list_templates. Stdio transport, npx-runnable.",
   "type": "module",
   "engines": {
@@ -39,5 +39,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/docjet-dev/docjet-mcp.git"
-  }
+  },
+  "mcpName": "io.github.docjet-dev/docjet-mcp"
 }
