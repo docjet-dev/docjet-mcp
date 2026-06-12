@@ -76,7 +76,7 @@ async function errorResult(res: { status: number; json: () => Promise<unknown> }
   };
 }
 
-/** Validate render input: template_id XOR-ish html required; slug allowlist. */
+/** Validate render input: template_id-or-html required; slug allowlist. */
 function validateRenderInput(input: RenderInput): void {
   if (input.template_id === undefined && input.html === undefined) {
     throw new Error('Either template_id or html must be provided');
@@ -98,39 +98,54 @@ function buildRenderBody(input: RenderInput): Record<string, unknown> {
 }
 
 /**
+ * Shared request helper: fetch + error-taxonomy mapping.
+ * Returns `{ json }` on 2xx, or `{ error }` (an MCP error result) on non-2xx.
+ */
+async function request(
+  method: 'GET' | 'POST',
+  path: string,
+  ctx: ToolCtx,
+  opts: { body?: unknown; auth?: boolean } = {},
+): Promise<{ json: unknown } | { error: ToolResult }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (opts.auth) {
+    headers['Authorization'] = `Bearer ${ctx.apiKey}`;
+  }
+  const init: RequestInit = { method, headers };
+  if (opts.body !== undefined) {
+    init.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(`${ctx.baseUrl}${path}`, init);
+  if (!res.ok) {
+    return { error: await errorResult(res) };
+  }
+  return { json: await res.json() };
+}
+
+/** Shared render flow for both output endpoints (?response=url → {url}). */
+async function renderToUrl(endpoint: string, input: RenderInput, ctx: ToolCtx): Promise<ToolResult> {
+  validateRenderInput(input);
+  const r = await request('POST', `${endpoint}?response=url`, ctx, {
+    body: buildRenderBody(input),
+    auth: true,
+  });
+  if ('error' in r) return r.error;
+  const data = r.json as { url?: string };
+  return textResult(data.url ?? JSON.stringify(data));
+}
+
+/**
  * render_pdf — POST /v1/render?response=url, returns the signed PDF URL.
  */
 export async function renderPdf(input: RenderInput, ctx: ToolCtx): Promise<ToolResult> {
-  validateRenderInput(input);
-  const res = await fetch(`${ctx.baseUrl}/v1/render?response=url`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${ctx.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(buildRenderBody(input)),
-  });
-  if (!res.ok) return errorResult(res);
-  const data = (await res.json()) as { url?: string };
-  return textResult(data.url ?? JSON.stringify(data));
+  return renderToUrl('/v1/render', input, ctx);
 }
 
 /**
  * render_image — POST /v1/image?response=url, returns the signed PNG URL.
  */
 export async function renderImage(input: RenderInput, ctx: ToolCtx): Promise<ToolResult> {
-  validateRenderInput(input);
-  const res = await fetch(`${ctx.baseUrl}/v1/image?response=url`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${ctx.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(buildRenderBody(input)),
-  });
-  if (!res.ok) return errorResult(res);
-  const data = (await res.json()) as { url?: string };
-  return textResult(data.url ?? JSON.stringify(data));
+  return renderToUrl('/v1/image', input, ctx);
 }
 
 /**
@@ -138,11 +153,7 @@ export async function renderImage(input: RenderInput, ctx: ToolCtx): Promise<Too
  * as pretty-printed JSON text content.
  */
 export async function listTemplates(_input: Record<string, never>, ctx: ToolCtx): Promise<ToolResult> {
-  const res = await fetch(`${ctx.baseUrl}/v1/templates`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!res.ok) return errorResult(res);
-  const data = await res.json();
-  return textResult(JSON.stringify(data, null, 2));
+  const r = await request('GET', '/v1/templates', ctx, { auth: false });
+  if ('error' in r) return r.error;
+  return textResult(JSON.stringify(r.json, null, 2));
 }
