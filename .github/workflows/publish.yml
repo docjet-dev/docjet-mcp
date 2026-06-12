@@ -1,0 +1,45 @@
+name: Publish to npm
+
+# npm provenance (sigstore/OIDC) requires a supported CI environment — a local
+# `npm publish --provenance` is refused by npm (T-05-32: all DocJet npm
+# publishes carry provenance attestations).
+#
+# This workflow is committed CI-ready ahead of the gate (D-58): it cannot run
+# until this package lives in its own GitHub repository with an NPM_TOKEN
+# secret configured. Trigger: publish a GitHub release (or run manually).
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance (OIDC)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
